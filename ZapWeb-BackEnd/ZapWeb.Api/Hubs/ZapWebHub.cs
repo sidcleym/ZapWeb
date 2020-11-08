@@ -166,7 +166,7 @@ namespace ZapWeb.Api.Hubs
 
                 var mensagens = await _context.Mensagem.Where(x => x.GrupoId == grupo.Id).ToArrayAsync();
 
-                await Clients.Caller.SendAsync("CriarGrupoResponse", new {nomeGrupo=nomeDoGrupo, emailUsuarioConvocado= emailUsuarioConvocado, apelido= usuarioConvocado?.apelido, mensagens = mensagens, });
+                await Clients.Caller.SendAsync("CriarAbrirGrupoResponse", new {nomeGrupo=nomeDoGrupo, emailUsuarioConvocado= emailUsuarioConvocado, apelido= usuarioConvocado?.apelido, mensagens = mensagens, grupoId=grupo.Id });
 
 
                 var conectionsIdConvocado = JsonConvert.DeserializeObject<List<string>>(usuarioConvocado.connectionsId);
@@ -218,12 +218,15 @@ namespace ZapWeb.Api.Hubs
 
         public async Task SalvarMensagem(int usuarioId, int GrupoId, string texto )
         {
+            var usuario = await _context.Usuario.FindAsync(usuarioId);
+
             var mensagem = new Mensagem()
             {
                 Texto = texto,
                 DataHora = DateTime.UtcNow,
                 UsuarioId = usuarioId,
-                GrupoId = GrupoId
+                GrupoId = GrupoId,
+                apelido = usuario.apelido
             };
 
             await _context.Mensagem.AddAsync(mensagem);

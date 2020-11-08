@@ -144,14 +144,23 @@ input[type=button], .btn-send {
 .message-right {
     float: right;
     text-align: end;
+    background-color: rgb(237, 245, 247);
 }
 .message-head {
-    background-color: white;
+    background-color:inherit;
+    font-size: 13px;
 }
 .message-message {
     margin-top: 15px;
     margin-bottom: 5px;
     color: #8C8C8C;
+}
+
+.message-date{
+    font-size: 11px;
+    color:rgb(187, 187, 202);
+    float: right;
+    
 }
 
 

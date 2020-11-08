@@ -15,6 +15,7 @@ class Conversation extends Component{
         this.state = {
             usuarioSelecionado:{email:''},
             grupoId:0,
+            usuarioId:0,
             texto:'',            
             mensagens :[ {texto:'mensagem 1', usuario:'Sid', usuarioId:0,grupoId:0}],
             listaUsuarios : [
@@ -34,8 +35,7 @@ class Conversation extends Component{
 
     }
 
-    onSair =()=>{
-      
+    onSair =()=>{      
         let usuario = JSON.parse(localStorage.getItem("Logado"));
         localStorage.removeItem("Logado");
                             
@@ -46,32 +46,32 @@ class Conversation extends Component{
      
      
    componentDidMount() {
-    let usuario = JSON.parse(localStorage.getItem("Logado"));
+        let usuario = JSON.parse(localStorage.getItem("Logado"));
 
-    if(usuario==null)
-        this.props.history.push('/login')
+        if(usuario==null)
+            this.props.history.push('/login')
 
-    this.connection = new signalR.HubConnectionBuilder()
-    .withUrl("http://localhost:30195/zapwebHub")
-     //.withHubProtocol(protocol)
-    .build();
-     // .fail(err=> console.log(err.toString()));
-   
-    this.connection.on('GetListaUsuariosResponse', this.getListaUsuariosResponse);
-    this.connection.on('CriarGrupoResponse', this.criarGrupoResponse);
-    this.connection.on('EnviarMensagemResponse', this.enviarMensagemResponse);
+        this.connection = new signalR.HubConnectionBuilder()
+        .withUrl("http://localhost:30195/zapwebHub")
+        //.withHubProtocol(protocol)
+        .build();
+        // .fail(err=> console.log(err.toString()));
     
-    
-    this.connection.start({credentials:true})
-    .then(function() { 
-          console.info('SignalR Connected');
-         // 
-         
+        this.connection.on('GetListaUsuariosResponse', this.getListaUsuariosResponse);
+        this.connection.on('CriarAbrirGrupoResponse', this.criarAbrirGrupoResponse);
+        this.connection.on('EnviarMensagemResponse', this.enviarMensagemResponse);
         
-    })
-    .catch(err => console.error('SignalR Connection Error: ', err));
+        
+        this.connection.start({credentials:true})
+        .then(function() { 
+            console.info('SignalR Connected');
+            // 
+            
+            
+        })
+        .catch(err => console.error('SignalR Connection Error: ', err));
 
-    setTimeout(this.iniciarBatePapo,100);
+        setTimeout(this.iniciarBatePapo,100);
    }
 
    getListaUsuariosResponse(usuarios){
@@ -85,21 +85,18 @@ class Conversation extends Component{
                 listaUsuarios.push(usuarios[i])
         }
 
-
         this.setState({listaUsuarios : listaUsuarios});
         
-
-
-        
-        console.log("lista:", listaUsuarios);
+        //console.log("lista:", listaUsuarios);
    }
 
    iniciarBatePapo=()=>{
-    let usuario = JSON.parse(localStorage.getItem("Logado"));
+        let usuario = JSON.parse(localStorage.getItem("Logado"));
 
-    this.connection.invoke("AtualizarConnectionId",usuario, true);
-    this.connection.invoke("GetListaUsuarios");
-    
+        this.connection.invoke("AtualizarConnectionId",usuario, true);
+        this.connection.invoke("GetListaUsuarios");
+
+        this.setState({usuarioId:usuario.id});    
    }
 
    componentWillUnmount(){
@@ -107,6 +104,8 @@ class Conversation extends Component{
 
         if(usuario!=null)
             this.connection.invoke("AtualizarConnectionId",usuario, false);
+        
+        
    }
 
    enviarMensagem = () =>{
@@ -115,7 +114,8 @@ class Conversation extends Component{
       let mensagem = {texto: this.state.texto, usuario:'Eu'}; 
       this.setState({texto:'', mensagens:[...this.state.mensagens, mensagem]});
      
-      this.connection.invoke("SalvarMensagem",usuario.id, this.state.grupoId);
+      console.log(usuario.id, this.state.grupoId, this.state.texto);
+      this.connection.invoke("SalvarMensagem",usuario.id, this.state.grupoId, this.state.texto);
       //this.setState({mensagens:[...this.state.mensagens, mensagem]})  
    }
 
@@ -147,7 +147,7 @@ class Conversation extends Component{
                     
                     { this.state.listaUsuarios.map((usuario) =>{
                         return(
-                            <div key="usuario.id" name={usuario.email} className="container-user-item" onClick={ (ev)=>{ this.criarAbrirGrupo(ev.target.name); } }>
+                            <div key={usuario.id} name={usuario.email} className="container-user-item" onClick={ (ev)=>{ this.criarAbrirGrupo(ev.target.name); } }>
                                 <img src={logo} name={usuario.email} />
                                 <div>
                                     <span name={usuario.email} >{usuario.apelido} <span> { usuario.isOnline ? '(Online)' : '(Offline)' } </span> </span>
@@ -169,16 +169,17 @@ class Conversation extends Component{
                         {
                             this.state.mensagens.map((mensagem) =>{
                                 return(
-                                    <div className={  mensagem.usuario=='Eu' ?  "message message-right" : "message message-left" }>
+                                    <div key={mensagem.id} className={  mensagem.usuarioId ==this.state.usuarioId ?  "message message-right" : "message message-left" }>
                                     <div className="message-head">
                                         <img src={chat} />   
-                                        {mensagem.usuario}
+                                        
+                                        { mensagem.apelido}
                                     </div>
                                     <div className="message-message">
                                        {mensagem.texto} 
                                     </div>
                                     
-                                    
+                                    <div className="message-date">{mensagem.dataHora}</div>
                                     </div>
 
                                 );

@@ -10,6 +10,7 @@ namespace ZapWeb.Api.Models
         public int Id { get; set; }
         public int GrupoId { get; set; }
         public string Texto { get; set; }
+        public string apelido { get; set; }
         public int UsuarioId { get; set; }
         public DateTime DataHora { get; set; }
     }
